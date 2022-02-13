@@ -58,3 +58,9 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+/Assets/Scripts/Ads/RewardedAds.cs
+/Assets/Animations
+/Assets/ExternalDependencyManager
+/Assets/Fonts
+/Assets/GoogleMobileAds
+/Assets/Levels

@@ -1,3 +1,4 @@
+using Assets.Scripts.Game;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,9 +31,7 @@ public class LevelPresenter : MonoBehaviour
     [SerializeField]
     private Vector2Int _sizeXY;
     [SerializeField]
-    private ParticleSystem _smoke;
-    [SerializeField]
-    private ParticleSystem _star;
+    private ParticleHandler _particleHandler;
 
     private bool[] _blocks;
     private bool[] _activeGoals;
@@ -193,13 +192,13 @@ public class LevelPresenter : MonoBehaviour
                         if (goalsNumber == 0) continue;
                         if (y > 0)
                         {
-                            if (!_blocks[x + (y - 1) * _sizeXY.x] || !_activeGoals[x + (y - 1) * _sizeXY.x])
+                            if (!_blocks[x + (y - 1) * _sizeXY.x] && !_activeGoals[x + (y - 1) * _sizeXY.x])
                             {
                                 continue;
                             }
                         }
                         random = UnityEngine.Random.Range(0, goalsNumber);
-                        _activeGoals[x + y * _sizeXY.x] = random <= 1; // chance  100 100 66 50 40 
+                        _activeGoals[x + y * _sizeXY.x] = random <= 1; // chance  100 100 66 40  
                         goalsNumber = _activeGoals[x + y * _sizeXY.x] ? goalsNumber + 1 : 0;
                         if (goalsNumber == 0) continue;
                         random = UnityEngine.Random.Range(1, (int)BlockColor.Sizeof);
@@ -228,46 +227,46 @@ public class LevelPresenter : MonoBehaviour
                 switch (random)
                 {
                     case 7:
-                        BuildArrowToTheRight(y);
+                        GenerateArrowToTheRight(y);
                         goto case 5;
                     case 5:
-                        BuildArrowToTheRight(y);
+                        GenerateArrowToTheRight(y);
                         goto case 1;
                     case 3:
                     case 1:
-                        BuildArrowToTheRight(y);
+                        GenerateArrowToTheRight(y);
                         break;
 
                     case 6:
-                        BuildArrowToTheLeft(y);
+                        GenerateArrowToTheLeft(y);
                         goto case 4;
                     case 4:
-                        BuildArrowToTheLeft(y);
+                        GenerateArrowToTheLeft(y);
                         goto case 0;
                     case 2:
                     case 0:
-                        BuildArrowToTheLeft(y);
+                        GenerateArrowToTheLeft(y);
                         break;
 
                     case 8:
-                        BuildArrowToTheRight(y);
+                        GenerateArrowToTheRight(y);
                         goto case 0;
 
                     case 9:
-                        BuildArrowToTheRight(y);
+                        GenerateArrowToTheRight(y);
                         goto case 4;
 
                     case 13:
-                        BuildArrowToTheRight(y);
+                        GenerateArrowToTheRight(y);
                         goto case 12;
                     case 12:
-                        BuildArrowToTheLeft(y);
+                        GenerateArrowToTheLeft(y);
                         goto case 11;
                     case 11:
-                        BuildArrowToTheLeft(y);
+                        GenerateArrowToTheLeft(y);
                         goto case 10;
                     case 10:
-                        BuildArrowToTheLeft(y);
+                        GenerateArrowToTheLeft(y);
                         goto case 5;
 
                     default:
@@ -275,7 +274,7 @@ public class LevelPresenter : MonoBehaviour
                 }
             }
         }
-        void BuildArrowToTheRight(int line)
+        void GenerateArrowToTheRight(int line)
         {
             random = UnityEngine.Random.Range(0, (int)BlockColor.Sizeof);
             _colors[(line + 1) * _sizeXY.x - 1 - arrowsRightInLine] = (BlockColor)random;
@@ -301,7 +300,7 @@ public class LevelPresenter : MonoBehaviour
                 rightExtremeSlotByColor[random]--;
             }
         }
-        void BuildArrowToTheLeft(int line)
+        void GenerateArrowToTheLeft(int line)
         {
             random = UnityEngine.Random.Range(0, (int)BlockColor.Sizeof);
             _colors[line * _sizeXY.x + arrowsLeftInLine] = (BlockColor)random;
@@ -343,7 +342,7 @@ public class LevelPresenter : MonoBehaviour
                 {
                     slot = _slots[i].position;
                     slot.y += y * _upperSlot;
-                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().blockColor = _colors[i + y * _sizeXY.x];
+                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
                     if (y == _sizeXY.y - 1)
                     {
                         slot.y += _upperSlot;
@@ -369,11 +368,7 @@ public class LevelPresenter : MonoBehaviour
                     }
                     slot = _slots[i].position;
                     slot.y += y * _upperSlot;
-                    GameObject ob = Instantiate(_goalPrefab, slot, Quaternion.identity, _canvas).gameObject;
-                    ob.GetComponent<Block>().blockColor = _colors[i + y * _sizeXY.x];
-                    ob.GetComponent<Goal>().Index(i + y * _sizeXY.x);
-                    _blockToBeDropped.Add(_colors[i + y * _sizeXY.x]);
-                    _goalCounter++;
+                    SpawnGoal(slot, i + y * _sizeXY.x);
                 }
                 else if (_arrows[i + y * _sizeXY.x])
                 {
@@ -384,12 +379,12 @@ public class LevelPresenter : MonoBehaviour
                         int index = _sizeXY.x - i - 1;
                         slot.x += (_slots[1].position.x - _slots[0].position.x) / 2f * index;
                         slot.y += 0.1f; //left arrows always should be higher
-                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().blockColor = _colors[i + y * _sizeXY.x];
+                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
                     }
                     else
                     {
                         slot.x -= (_slots[1].position.x - _slots[0].position.x) / 2f * (i);
-                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().blockColor = _colors[i + y * _sizeXY.x];
+                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
                     }
                 }
             }
@@ -400,7 +395,7 @@ public class LevelPresenter : MonoBehaviour
             slot = _slots[i].position;
             Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
         }
-        _craneSlot.GetComponent<Block>().blockColor =_blockToBeDropped[_goalCompleted];
+        _craneSlot.GetComponent<Block>().BlockColor =_blockToBeDropped[_goalCompleted];
         _craneAnimator = _crane.GetComponent<Animator>();
         _startcranePos = _crane.transform.localPosition;
         _craneAnimator.SetTrigger("Take");
@@ -427,38 +422,27 @@ public class LevelPresenter : MonoBehaviour
         _craneSlot.GetComponent<Image>().enabled = false;
         _craneAnimator.SetTrigger("Drop");
         Block b = Instantiate(_blockPrefab, _craneSlot.transform.position, Quaternion.identity, _canvas).GetComponent<Block>();
-        b.blockColor = _blockToBeDropped[_goalCompleted];
+        b.BlockColor = _blockToBeDropped[_goalCompleted];
         b.ReachedGoal += BlockReachedGoal;
         b.ReachedEmpty += BlockReachedEmpty;
         b.Dash += BlockDash;
         _spawnedObjects.Add(b.gameObject);
     }
+    public void RestartLevel()
+    {
+        Recycle();
+        InitLevel();
+        CraneRefill();
+    } 
 
     private void InitLevel() {
         _goalCompleted = 0;
         _hp = _maxHp;
     }
-    
-    public void RestartLevel()
-    {
-        Recycle();
-        InitLevel();       
-        _crane.transform.localPosition = _startcranePos;
-        _craneSlot.GetComponent<Image>().enabled = true;
-        _craneSlot.GetComponent<Block>().blockColor = _blockToBeDropped[_goalCompleted];
-        _craneAnimator.SetTrigger("Take");
-        _dropped = false;
-    }
 
     public void Recycle()
     {
         foreach (GameObject v in _spawnedObjects) {
-            if (v.CompareTag("Block"))
-            {
-                v.GetComponent<Block>().ReachedGoal -= BlockReachedGoal;
-                v.GetComponent<Block>().ReachedEmpty -= BlockReachedEmpty;
-                v.GetComponent<Block>().Dash -= BlockDash;
-            }
             Destroy(v);
         }
         _spawnedObjects.Clear();
@@ -466,55 +450,63 @@ public class LevelPresenter : MonoBehaviour
         _usedObjects.Clear();
     }
 
-    private void BlockReachedGoal(GameObject goal, BlockColor blockColor, BlockColor goalColor, int index)
+    private void BlockReachedGoal(Goal goal, Block block)
     {
         _goalCompleted++;
-        _usedObjects.Add(goal);
-        goal.SetActive(false);
-        if (blockColor != goalColor)
+        _usedObjects.Add(goal.gameObject);
+        goal.gameObject.SetActive(false);
+        if (block.BlockColor != goal.GetComponent<Block>().BlockColor)
         {
             _hp--;
             if (GameOverCheck()) return;
             Vibration.VibratePeek();
         }
-        index += _sizeXY.x;
+        int index = goal.GetIndex;
+         index += _sizeXY.x;
         if (_activeGoals[index])
         {
-            Vector3 position = goal.transform.position + new Vector3(0f, _upperSlot, 0f);
-            GameObject ob = Instantiate(_goalPrefab, position, Quaternion.identity, _canvas);
-            ob.GetComponent<Goal>().Index(index);
-            _goalCounter++;
-            ob.GetComponent<Block>().blockColor =_colors[index];
-            _blockToBeDropped.Add(_colors[index]);
+            SpawnGoal(goal.gameObject.transform.position + new Vector3(0f, _upperSlot, 0f), index, true);
         }
         else
         {
-            Vector3 position = goal.transform.position + new Vector3(0f, _upperSlot, 0f);
-            GameObject ob = Instantiate(_emptyPrefab, position, Quaternion.identity, _canvas);
-            _spawnedObjects.Add(ob);
+            SpawnEmpty(goal.gameObject.transform.position + new Vector3(0f, _upperSlot, 0f));
         }
+        Unsubscribe(block);
         if (_goalCompleted == _goalCounter)
         {
             GameOver?.Invoke(_maxHp - _hp, true);
             return;
         }
-        _star.gameObject.transform.localPosition = goal.transform.localPosition;
-        _star.startColor = goal.GetComponent<Image>().color;
-        _star.Play();
+        _particleHandler.SetSuccessParticle(goal.transform.localPosition, goal.GetComponent<Image>().color);
         CraneRefill();
     }
-    private void BlockReachedEmpty(GameObject empty)
+    private void BlockReachedEmpty(GameObject empty, Block block)
     {
+        _usedObjects.Add(empty);  
+        empty.SetActive(false);
+        Unsubscribe(block);
+        Vibration.VibratePeek();
         _hp -= 2;
         if (GameOverCheck()) return;
-        _usedObjects.Add(empty);
-        empty.SetActive(false);
-        _smoke.gameObject.transform.localPosition = empty.transform.localPosition;
-        _smoke.Play();
-        Vector3 position = empty.transform.position + new Vector3(0f, _upperSlot, 0f);
-        GameObject ob = Instantiate(_emptyPrefab, position, Quaternion.identity,_canvas);
-        _spawnedObjects.Add(ob);
+        _particleHandler.SetFailedParticle(empty.transform.localPosition);
+        SpawnEmpty(empty.transform.position + new Vector3(0f, _upperSlot, 0f));
         CraneRefill();
+    }
+
+    private void SpawnGoal(Vector3 position, int index, bool lateSpawn = false)
+    {
+        GameObject ob = Instantiate(_goalPrefab, position, Quaternion.identity, _canvas);
+        ob.GetComponent<Goal>().Index(index);
+        ob.GetComponent<Block>().BlockColor = _colors[index];
+        _blockToBeDropped.Add(_colors[index]); 
+        _goalCounter++;
+        if (lateSpawn) _spawnedObjects.Add(ob);
+    }
+
+    private void SpawnEmpty(Vector3 position)
+    {
+        GameObject ob = Instantiate(_emptyPrefab, position, Quaternion.identity, _canvas);
+        _spawnedObjects.Add(ob);
     }
     private bool GameOverCheck()
     {
@@ -530,8 +522,15 @@ public class LevelPresenter : MonoBehaviour
         _crane.transform.localPosition = _startcranePos;
         _craneAnimator.SetTrigger("Take");
         _craneSlot.GetComponent<Image>().enabled = true;
-        _craneSlot.GetComponent<Block>().blockColor = _blockToBeDropped[_goalCompleted];
+        _craneSlot.GetComponent<Block>().BlockColor = _blockToBeDropped[_goalCompleted];
         _dropped = false;
+    }
+
+    private void Unsubscribe(Block block)
+    {
+        block.ReachedGoal -= BlockReachedGoal;
+        block.ReachedEmpty -= BlockReachedEmpty;
+        block.Dash -= BlockDash;
     }
 
     private void BlockDash(GameObject block, bool right)
@@ -564,8 +563,4 @@ public class LevelPresenter : MonoBehaviour
             }
         }
     }
-
-
-
-    
 }

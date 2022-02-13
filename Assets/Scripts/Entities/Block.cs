@@ -5,11 +5,11 @@ public class Block : MonoBehaviour
 {
     private BlockColor _blockColor;
     private Image _image;
-    public event System.Action<GameObject, BlockColor, BlockColor, int> ReachedGoal;
-    public event System.Action<GameObject> ReachedEmpty;
+    public event System.Action<Goal, Block> ReachedGoal;
+    public event System.Action<GameObject,Block> ReachedEmpty;
     public event System.Action<GameObject,bool> Dash;
 
-    public BlockColor blockColor
+    public BlockColor BlockColor
     {
         get => _blockColor;
         set => ChangeColor(value);
@@ -47,19 +47,17 @@ public class Block : MonoBehaviour
             
             if (collision.CompareTag("Right") || collision.CompareTag("Left"))
             {
-                BlockColor collisionColor = collision.GetComponent<Block>().blockColor;
-                if (collisionColor == BlockColor.Black || blockColor == BlockColor.Black || collisionColor == blockColor )
+                BlockColor collisionColor = collision.GetComponent<Block>().BlockColor;
+                if (collisionColor == BlockColor.Black || BlockColor == BlockColor.Black || collisionColor == BlockColor )
                 Dash?.Invoke(gameObject, collision.CompareTag("Right"));
             }
             else if (collision.CompareTag("Goal"))
             {
-                BlockColor collisionColor = collision.GetComponent<Block>().blockColor;
-                ReachedGoal?.Invoke(collision.gameObject, blockColor, collisionColor, collision.GetComponent<Goal>().GetIndex);
+                ReachedGoal?.Invoke(collision.GetComponent<Goal>(), this);
             }
             else if (collision.CompareTag("Empty"))
             {
-                ReachedEmpty?.Invoke(collision.gameObject); 
-                Vibration.VibratePeek();
+                ReachedEmpty?.Invoke(collision.gameObject, this); 
             }
         }
     }
