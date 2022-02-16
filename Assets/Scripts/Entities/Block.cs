@@ -30,7 +30,7 @@ public class Block : MonoBehaviour
             case BlockColor.Yellow:
                 color = new Color(0.9245283f, 0.860714f, 0.06541473f);
                 break; 
-            case BlockColor.Purple:
+            case BlockColor.Green:
                 color = new Color(0.3238445f, 0.8867924f, 0.2133321f);
                 break;
             case BlockColor.Black:
@@ -67,7 +67,7 @@ public class Block : MonoBehaviour
 public enum BlockColor {
 Black = 0,
 Blue = 1,
-Purple = 2,
+Green = 2,
 Red = 3,
 Yellow = 4,
 Sizeof = 5

@@ -36,7 +36,7 @@ public class LevelSelector : MonoBehaviour
 		if (_energyManager.TryUseEnergy()) { 
 			_energyManager.Recycle();
 			Player.Level = level;
-			_fader.FadeTo(SceneNames.Game);
+			_fader.FadeTo(Constants.SceneGame);
 		}
 		else
         {

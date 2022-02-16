@@ -1,4 +1,5 @@
-using Assets.Scripts.Game;
+using Assets.Scripts.Entities;
+using Assets.Scripts.Game.LevelModel;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,10 +30,9 @@ public class LevelPresenter : MonoBehaviour
     [SerializeField]
     private Transform _upSlot;
     [SerializeField]
-    private Vector2Int _sizeXY;
-    [SerializeField]
     private ParticleHandler _particleHandler;
 
+    private Vector2Int _sizeXY = new Vector2Int(Constants.SizeX,Constants.SizeY);
     private bool[] _blocks;
     private bool[] _activeGoals;
     private bool[] _arrows;
@@ -40,10 +40,9 @@ public class LevelPresenter : MonoBehaviour
     private List<BlockColor> _blockToBeDropped;
 
     private short _goalCounter;
-    private short _goalCompleted = 0;
+    private short _goalCompleted;
 
-    [SerializeField]
-    private short _maxHp = 10;
+    private readonly short _maxHp = Constants.MaxHp;
     private short _hp;
     private float _upperSlot;
 
@@ -51,7 +50,10 @@ public class LevelPresenter : MonoBehaviour
     private bool _dropped;
 
     private Vector3 _startcranePos;
-    private short _moved;   
+    private short _moved;
+
+    private LevelReader _levelReader = new LevelReader();
+    private LevelGenerator _levelGenerator = new LevelGenerator(); 
 
     private List<GameObject> _spawnedObjects = new List<GameObject>();
     private List<GameObject> _usedObjects = new List<GameObject>();
@@ -59,9 +61,7 @@ public class LevelPresenter : MonoBehaviour
     public int LevelLength => _levels.Length;
 
     public event Action<int,bool> GameOver;
-
-
-    public void LevelReader(int level)
+    public void GetLevelData(int level)
     {
         _blocks = new bool[_sizeXY.x * _sizeXY.y];
         _activeGoals = new bool[_sizeXY.x * _sizeXY.y];
@@ -70,267 +70,16 @@ public class LevelPresenter : MonoBehaviour
         _blockToBeDropped = new List<BlockColor>();
         if (level < 0)
         {
-            GenerateLevel();
-            return;
+            _levelGenerator.Generate(_sizeXY,_blocks,_activeGoals,_colors,_arrows);
         }
-        string s;
-        try
+        else
         {
-            s = _levels[level].text;
-        }
-        catch
-        {
-            s = _levels[0].text;
-        }
-        string text = s.Trim().Replace(" ", "").Replace("\n", "");
-        int temp = text.Length - _sizeXY.x;
-
-        for (int i = 0; i < _sizeXY.x * _sizeXY.y; i++, temp++)
-        {
-            if (text[temp] == 'x')
-            {
-                if (((i + 1) % _sizeXY.x) == 0)
-                {
-                    temp = temp - _sizeXY.x - _sizeXY.x - 1;
-                }
-                continue;
-            }
-            switch (text[temp])
-            {
-                case 'b':
-                    _blocks[i] = true;
-                    _colors[i] = BlockColor.Black;
-                    break;
-                case 's':
-                    _blocks[i] = true;
-                    _colors[i] = BlockColor.Blue;
-                    break;
-                case 'r':
-                    _blocks[i] = true;
-                    _colors[i] = BlockColor.Red;
-                    break;
-                case 'y':
-                    _blocks[i] = true;
-                    _colors[i] = BlockColor.Yellow;
-                    break;
-                case 'p':
-                    _blocks[i] = true;
-                    _colors[i] = BlockColor.Red;
-                    break;
-                case 'B':
-                    _activeGoals[i] = true;
-                    _colors[i] = BlockColor.Black;
-                    break;
-                case 'S':
-                    _activeGoals[i] = true;
-                    _colors[i] = BlockColor.Blue;
-                    break;
-                case 'R':
-                    _activeGoals[i] = true;
-                    _colors[i] = BlockColor.Red;
-                    break;
-                case 'Y':
-                    _activeGoals[i] = true;
-                    _colors[i] = BlockColor.Yellow;
-                    break;
-                case 'P':
-                    _activeGoals[i] = true;
-                    _colors[i] = BlockColor.Purple;
-                    break;
-                case '1':
-                    _arrows[i] = true;
-                    _colors[i] = BlockColor.Black;
-                    break;
-                case '2':
-                    _arrows[i] = true;
-                    _colors[i] = BlockColor.Blue;
-                    break;
-                case '3':
-                    _arrows[i] = true;
-                    _colors[i] = BlockColor.Purple;
-                    break;
-                case '4':
-                    _arrows[i] = true;
-                    _colors[i] = BlockColor.Red;
-                    break;
-                case '5':
-                    _arrows[i] = true;
-                    _colors[i] = BlockColor.Yellow;
-                    break;
-
-            }
-            if (((i + 1) % _sizeXY.x) == 0)
-            {
-                temp = temp - _sizeXY.x - _sizeXY.x - 1;
-            }
+            _levelReader.Read(_levels,level,_sizeXY,_blocks,_activeGoals,_colors,_arrows);
         }
     }
-
-    private void GenerateLevel()
+    public void BuildLevel()
     {
-        bool lineHasBlock;
-        int random, goalsNumber = 1, blackArrowsMoveToRight = 0, arrowsLeftInLine, arrowsRightInLine;
-        int[] rightExtremeSlotByColor = new int[(int)BlockColor.Sizeof];
-        int[] leftExtremeSlotByColor = new int[(int)BlockColor.Sizeof];
-        for (int i = 0; i < rightExtremeSlotByColor.Length; i++)
-        {
-            rightExtremeSlotByColor[i] = _sizeXY.x;
-            leftExtremeSlotByColor[i] = _sizeXY.x;
-        }
-        for (int y = 0; y < _sizeXY.y; y++)
-        {
-            arrowsRightInLine = 0;
-            arrowsLeftInLine = 0;
-            if (y <= _sizeXY.y / 2)
-            {
-                lineHasBlock = false;
-                for (int x = 0; x < _sizeXY.x; x++)
-                {
-                    random = UnityEngine.Random.Range(0, y + 4);
-                    if (random > 1) //add last chance spawn
-                    {
-                        if (goalsNumber == 0) continue;
-                        if (y > 0)
-                        {
-                            if (!_blocks[x + (y - 1) * _sizeXY.x] && !_activeGoals[x + (y - 1) * _sizeXY.x])
-                            {
-                                continue;
-                            }
-                        }
-                        random = UnityEngine.Random.Range(0, goalsNumber);
-                        _activeGoals[x + y * _sizeXY.x] = random <= 1; // chance  100 100 66 40  
-                        goalsNumber = _activeGoals[x + y * _sizeXY.x] ? goalsNumber + 1 : 0;
-                        if (goalsNumber == 0) continue;
-                        random = UnityEngine.Random.Range(1, (int)BlockColor.Sizeof);
-                        _colors[x + y * _sizeXY.x] = (BlockColor)random;
-                        rightExtremeSlotByColor[random] = Mathf.Min(_sizeXY.x - 1 - x, rightExtremeSlotByColor[random]);
-                        leftExtremeSlotByColor[random] = Mathf.Min(x, leftExtremeSlotByColor[random]);
-                        continue;
-                    }
-                    if (y > 0)
-                    {
-                        if (!_blocks[x + (y - 1) * _sizeXY.x] || y == _sizeXY.y / 2)
-                        {
-                            continue;
-                        }
-                    }
-                    _blocks[x + y * _sizeXY.x] = true;
-                    random = UnityEngine.Random.Range(0, 5);
-                    _colors[x + y * _sizeXY.x] = (BlockColor)random;
-                    lineHasBlock = true;
-                }
-                if (!lineHasBlock && y < _sizeXY.y / 2) y = _sizeXY.y / 2;
-            }
-            else
-            {
-                random = UnityEngine.Random.Range(0, 16); //0 1 2 3 - 1arrow; 4 5 - 2 arrows; 6 7 - 3arrows; 8 - 1a 1a; 9 - 2a 1a; 10 - 1a 2a; 11 - 2a 2a, 12 - 3a 2a 13 - 3a 3a; 
-                switch (random)
-                {
-                    case 7:
-                        GenerateArrowToTheRight(y);
-                        goto case 5;
-                    case 5:
-                        GenerateArrowToTheRight(y);
-                        goto case 1;
-                    case 3:
-                    case 1:
-                        GenerateArrowToTheRight(y);
-                        break;
-
-                    case 6:
-                        GenerateArrowToTheLeft(y);
-                        goto case 4;
-                    case 4:
-                        GenerateArrowToTheLeft(y);
-                        goto case 0;
-                    case 2:
-                    case 0:
-                        GenerateArrowToTheLeft(y);
-                        break;
-
-                    case 8:
-                        GenerateArrowToTheRight(y);
-                        goto case 0;
-
-                    case 9:
-                        GenerateArrowToTheRight(y);
-                        goto case 4;
-
-                    case 13:
-                        GenerateArrowToTheRight(y);
-                        goto case 12;
-                    case 12:
-                        GenerateArrowToTheLeft(y);
-                        goto case 11;
-                    case 11:
-                        GenerateArrowToTheLeft(y);
-                        goto case 10;
-                    case 10:
-                        GenerateArrowToTheLeft(y);
-                        goto case 5;
-
-                    default:
-                        break;
-                }
-            }
-        }
-        void GenerateArrowToTheRight(int line)
-        {
-            random = UnityEngine.Random.Range(0, (int)BlockColor.Sizeof);
-            _colors[(line + 1) * _sizeXY.x - 1 - arrowsRightInLine] = (BlockColor)random;
-            if (rightExtremeSlotByColor[random] + blackArrowsMoveToRight > 0 || random == 0)
-            {
-                if (random == 0)
-                {
-                    bool flag = false;
-                    for (int i = 0; i < rightExtremeSlotByColor.Length; i++)
-                    {
-                        if (rightExtremeSlotByColor[i] + blackArrowsMoveToRight <= 0)
-                        {
-                            flag = true;
-                            break;
-                        }
-                    }
-                    if (flag) return;
-                    blackArrowsMoveToRight--;
-                }
-                _arrows[(line + 1) * _sizeXY.x - 1 - arrowsRightInLine] = true;
-                arrowsRightInLine++;
-                leftExtremeSlotByColor[random]++;
-                rightExtremeSlotByColor[random]--;
-            }
-        }
-        void GenerateArrowToTheLeft(int line)
-        {
-            random = UnityEngine.Random.Range(0, (int)BlockColor.Sizeof);
-            _colors[line * _sizeXY.x + arrowsLeftInLine] = (BlockColor)random;
-            if (leftExtremeSlotByColor[random] - blackArrowsMoveToRight > 0 || random == 0)
-            {
-                if (random == 0)
-                {
-                    bool flag = false;
-                    for (int i = 0; i < leftExtremeSlotByColor.Length; i++)
-                    {
-                        if (leftExtremeSlotByColor[i] - blackArrowsMoveToRight <= 0)
-                        {
-                            flag = true;
-                            break;
-                        }
-                    }
-                    if (flag) { return; }
-                    blackArrowsMoveToRight++;
-                }
-                _arrows[line * _sizeXY.x + arrowsLeftInLine] = true;
-                arrowsLeftInLine++;
-                rightExtremeSlotByColor[random]++;
-                leftExtremeSlotByColor[random]--;
-            }
-        }
-    }
-
-    public void InitializeLevel()
-    {
-        InitLevel();
+        BeginNewGame();
         _goalCounter = 0;
         _upperSlot = _upSlot.position.y - _slots[0].position.y;
         Vector3 slot;
@@ -431,11 +180,11 @@ public class LevelPresenter : MonoBehaviour
     public void RestartLevel()
     {
         Recycle();
-        InitLevel();
+        BeginNewGame();
         CraneRefill();
     } 
 
-    private void InitLevel() {
+    private void BeginNewGame() {
         _goalCompleted = 0;
         _hp = _maxHp;
     }

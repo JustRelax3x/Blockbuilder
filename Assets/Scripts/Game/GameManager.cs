@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         _playerLevel = Player.Level;
-        _levelPresenter.LevelReader(_playerLevel);
+        _levelPresenter.GetLevelData(_playerLevel);
         if (_playerLevel < 0)
         {
             _playerLevel = Player.InfinityLevel;
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
         _pause = false;
         Vibration.Init();
         _gameUIHud.ActivateUI(_playerLevel, !_infinityMode, null);
-        _levelPresenter.InitializeLevel();
+        _levelPresenter.BuildLevel();
         _uiReady += RestartLevel;
         _levelPresenter.GameOver += GameOver;
         _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
@@ -109,7 +109,7 @@ public class GameManager : MonoBehaviour
             {
                 Player.Level = _playerLevel;
             }
-            ActivateScene(SceneNames.Game);
+            ActivateScene(Constants.SceneGame);
         }
     }
     public void OnPause()
@@ -120,7 +120,7 @@ public class GameManager : MonoBehaviour
     }
     public void Menu()
     {
-        ActivateScene(SceneNames.Menu);
+        ActivateScene(Constants.SceneMenu);
     }
     private void OnApplicationPause(bool pause)
     {

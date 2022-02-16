@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-namespace Assets.Scripts.Game
+namespace Assets.Scripts.Game.LevelModel
 {
     class ParticleHandler : MonoBehaviour
     {
@@ -8,11 +8,17 @@ namespace Assets.Scripts.Game
         [SerializeField]
         private ParticleSystem _star;
 
+        private ParticleSystem.MainModule _starModule;
 
+        private void OnEnable()
+        {
+            _starModule = _star.main;
+        }
         public void SetSuccessParticle(Vector3 position, Color color)
         {
             _star.gameObject.transform.localPosition = position;
-            _star.startColor = color;
+            if (color == Color.black) color = new Color(0.2f,0.2f,0.2f);
+            _starModule.startColor = color;
             _star.Play();
         }
 
