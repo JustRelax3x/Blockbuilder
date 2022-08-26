@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Entities;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -28,7 +29,6 @@ namespace Assets.Scripts
             _energyModel._energyChanged += EnergyValueUpdater;
             _energyModel._timeLeftChanged += TimeLeftUpdater;
             ActivateUI();
-            SimpleLocalization.LocalizationManager.LocalizationChanged += LanguageControl;
         }
 
         public bool TryUseEnergy(int amount = 1)
@@ -94,21 +94,14 @@ namespace Assets.Scripts
             else
             {
                 _energyUI.Time(-1);
-                Player.TimeLeftToAddEnergy = Player.TIMEToAddEnergy-1;
+                Player.TimeLeftToAddEnergy = Constants.TimeToAddEnergy-1;
             }
-        }
-
-        private void LanguageControl()
-        {
-            if (!_energyModel.IsFull) return;
-            _energyUI.Time(-1);
         }
 
         public void Recycle()
         {
             _energyModel._energyChanged -= EnergyValueUpdater;
             _energyModel._timeLeftChanged -= TimeLeftUpdater;
-            SimpleLocalization.LocalizationManager.LocalizationChanged -= LanguageControl;
         }
 
     }

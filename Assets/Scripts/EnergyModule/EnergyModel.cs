@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Assets.Scripts.Entities;
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts
 {
     internal class EnergyModel
     {
-        private int _currentEnergy, _maxEnergy;
-
-        private readonly int _timeToAddEnergy;
+        private int _currentEnergy;
+        private readonly int _maxEnergy,_timeToAddEnergy;
         
         private State _state;
         private enum State
@@ -40,7 +40,7 @@ namespace Assets.Scripts
             if (timeToAddEnergy <= 0)
             {
                 Debug.LogError("Time to add energy <= 0" + timeToAddEnergy);
-                timeToAddEnergy = 150;
+                timeToAddEnergy = Constants.TimeToAddEnergy;
             }
             _currentEnergy = energy;
             _timeToAddEnergy = timeToAddEnergy;

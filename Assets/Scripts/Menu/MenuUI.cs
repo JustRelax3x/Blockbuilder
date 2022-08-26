@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
@@ -44,7 +45,7 @@ public class MenuUI : MonoBehaviour
     public void OnLanguageClicked()
     {
         int n = Player.Language;
-        Player.Language = n == Player.MAXLanguage - 1 ? 0 : n+1;
+        Player.Language = n == Constants.MaxLanguage - 1 ? 0 : n+1;
         Assets.SimpleLocalization.LocalizationManager.ChangeLanguage(Player.Language);
     }
 

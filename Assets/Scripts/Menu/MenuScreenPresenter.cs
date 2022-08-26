@@ -16,8 +16,7 @@ public class MenuScreenPresenter : MonoBehaviour
     public void ChangeScreen(int num)
     {
         if (num == _currentScreen || num >= _screens.Length || _isChanging == true) return;
-        bool dir;
-        dir = num < _currentScreen;
+        bool dir = num < _currentScreen;
         _isChanging = true;
         _screens[_currentScreen].CloseScreen(dir);
         _screens[num].AnimationDone += Changed;

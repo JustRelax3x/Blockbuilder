@@ -1,6 +1,7 @@
 using UnityEngine;
 using Assets.Scripts;
 using Assets.Scripts.Entities;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -38,24 +39,25 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         _pause = false;
-        Vibration.Init();
+        //Vibration.Init();
         _gameUIHud.ActivateUI(_playerLevel, !_infinityMode, null);
         _levelPresenter.BuildLevel();
-        _uiReady += RestartLevel;
+        _uiReady += StartCurrentLevel;
         _levelPresenter.GameOver += GameOver;
-        _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
+        _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
     }
 
 
-    private void GameOver(int score, bool completed)
+    private void GameOver(int fails, bool completed)
     {
-        short stars = 0;
+        short stars = 0; 
+        _energyManager.ActivateUI();
         if (!completed)
         {
             _gameUIHud.ActivateGGUI(stars);
             return;
         }
-        switch (score)
+        switch (fails)
         {
             case 0:
                 stars = 3;
@@ -70,7 +72,6 @@ public class GameManager : MonoBehaviour
                 break;
         }
         _gameUIHud.ActivateGGUI(stars);
-        _energyManager.ActivateUI();
         if (!_infinityMode && stars > Player.StarsInLevel[_playerLevel])
         {
             Player.StarsInLevel[_playerLevel] = stars;
@@ -84,20 +85,23 @@ public class GameManager : MonoBehaviour
             Player.InfinityLevel = _playerLevel+1;
         }
     }
-    public void RestartPreviousLevel()
+    public void RestartCurrentLevel()
     {
         if (_energyManager.TryUseEnergy())
         {
             if (_pause) OnPause();
             _gameUIHud.ActivateUI(_playerLevel, !_infinityMode,_uiReady);
         }
+        else
+        {
+            _energyManager.ActivateUI();
+        }
     }
-
-    private void RestartLevel()
+    private void StartCurrentLevel()
     {
         _levelPresenter.RestartLevel();
     }
-    public void StartGame()
+    public void StartNextLevel()
     {  
         if (_energyManager.TryUseEnergy())
         {
@@ -109,7 +113,7 @@ public class GameManager : MonoBehaviour
             {
                 Player.Level = _playerLevel;
             }
-            ActivateScene(Constants.SceneGame);
+            ActivateScene(Constants.GameScene);
         }
     }
     public void OnPause()
@@ -120,7 +124,7 @@ public class GameManager : MonoBehaviour
     }
     public void Menu()
     {
-        ActivateScene(Constants.SceneMenu);
+        ActivateScene(Constants.MenuScene);
     }
     private void OnApplicationPause(bool pause)
     {
@@ -132,7 +136,7 @@ public class GameManager : MonoBehaviour
         else
         {
             _save.LoadLastSave();
-            _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
+            _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
         }
     }
 
@@ -140,19 +144,15 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         Recycle();
-        _fader.FadeTo(scene);
+        SceneManager.LoadScene(scene);
     }
 
     private void Recycle()
     {
-        _uiReady -= RestartLevel;
+        _uiReady -= StartCurrentLevel;
         _levelPresenter.GameOver -= GameOver;
         _energyManager.Recycle();
         _levelPresenter.Recycle();
-    }
-
-    private void OnApplicationQuit()
-    {
         _save.SaveData();
     }
 

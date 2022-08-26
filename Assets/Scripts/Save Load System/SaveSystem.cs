@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities;
 using System;
 using UnityEngine;
 
@@ -61,8 +62,8 @@ public class SaveSystem
         Player.Volume = false;
         Player.Vibration = false;
         Player.StarsInLevel[0] = 0;
-        Player.Energy = Player.MAXEnergy;
-        Player.TimeLeftToAddEnergy = Player.TIMEToAddEnergy;
+        Player.Energy = Constants.MaxEnergy;
+        Player.TimeLeftToAddEnergy = Constants.TimeToAddEnergy;
         Player.LastTimeClosed = 0;
         Player.Language = 0;
     }

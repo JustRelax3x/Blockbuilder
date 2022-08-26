@@ -87,53 +87,40 @@ public class LevelPresenter : MonoBehaviour
         {
             for (int i = 0; i < _sizeXY.x; i++)
             {
-                if (_blocks[i + y * _sizeXY.x])
+                int slotIndex = i + y * _sizeXY.x;
+                if (!_blocks[slotIndex] && !_activeGoals[slotIndex] && !_arrows[slotIndex])
+                    continue;
+                slot = _slots[i].position;
+                slot.y += y * _upperSlot;
+                if (_blocks[slotIndex])
                 {
-                    slot = _slots[i].position;
-                    slot.y += y * _upperSlot;
-                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
-                    if (y == _sizeXY.y - 1)
-                    {
-                        slot.y += _upperSlot;
-                        Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
-                    }
-                    else
-                    {
-                        if (!_activeGoals[i + (y + 1) * _sizeXY.x] && !_blocks[i + (y + 1) * _sizeXY.x])
-                        {
-                            slot.y += _upperSlot;
-                            Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
-                        }
-                    }
+                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
+                    if ( y != _sizeXY.y - 1 && (_activeGoals[i + (y + 1) * _sizeXY.x] || _blocks[i + (y + 1) * _sizeXY.x]))
+                        continue;
+                    slot.y += _upperSlot;
+                    Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
                 }
-                else if (_activeGoals[i + y * _sizeXY.x])
+                else if (_activeGoals[slotIndex])
                 {
-                    if (y > 0)
+                    if (y > 0 && (!_blocks[i + (y - 1) * _sizeXY.x]))
                     {
-                        if (_activeGoals[i + (y - 1) * _sizeXY.x] || !_blocks[i + (y - 1) * _sizeXY.x])
-                        {
-                            continue;
-                        }
+                        continue;
                     }
-                    slot = _slots[i].position;
-                    slot.y += y * _upperSlot;
-                    SpawnGoal(slot, i + y * _sizeXY.x);
+                    SpawnGoal(slot, slotIndex);
                 }
-                else if (_arrows[i + y * _sizeXY.x])
+                else if (_arrows[slotIndex])
                 {
-                    slot = _slots[i].position;
-                    slot.y += y * _upperSlot;
                     if (i > _sizeXY.x / 2f)
                     {
                         int index = _sizeXY.x - i - 1;
                         slot.x += (_slots[1].position.x - _slots[0].position.x) / 2f * index;
                         slot.y += 0.1f; //left arrows always should be higher
-                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
+                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                     else
                     {
                         slot.x -= (_slots[1].position.x - _slots[0].position.x) / 2f * (i);
-                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
+                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                 }
             }
@@ -210,8 +197,7 @@ public class LevelPresenter : MonoBehaviour
             if (GameOverCheck()) return;
             Vibration.VibratePeek();
         }
-        int index = goal.GetIndex;
-         index += _sizeXY.x;
+        int index = goal.GetIndex + _sizeXY.x;
         if (_activeGoals[index])
         {
             SpawnGoal(goal.gameObject.transform.position + new Vector3(0f, _upperSlot, 0f), index, true);
@@ -274,14 +260,12 @@ public class LevelPresenter : MonoBehaviour
         _craneSlot.GetComponent<Block>().BlockColor = _blockToBeDropped[_goalCompleted];
         _dropped = false;
     }
-
     private void Unsubscribe(Block block)
     {
         block.ReachedGoal -= BlockReachedGoal;
         block.ReachedEmpty -= BlockReachedEmpty;
         block.Dash -= BlockDash;
     }
-
     private void BlockDash(GameObject block, bool right)
     {
         float dash = _slots[1].position.x - _slots[0].position.x;
@@ -304,7 +288,6 @@ public class LevelPresenter : MonoBehaviour
             if (block.transform.position.x > _slots[0].position.x + dash / 2)
             {
                 block.transform.position -= new Vector3(dash, 0f);
-
             }
             else
             {

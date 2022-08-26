@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities;
 using System;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ public class TimeHandler
     public int[] MeasureEnergyGap(long lastTime)
     {
         int timegap = MeasureTimeGap(lastTime);
-        int timeToAddEnergy = Player.TIMEToAddEnergy;
+        int timeToAddEnergy = Constants.TimeToAddEnergy;
         return new int[2] {timegap / timeToAddEnergy, timegap%timeToAddEnergy};
     }
     public int MeasureTimeGap(long lastTime)
@@ -15,7 +16,7 @@ public class TimeHandler
         long gap = GetRealTime() - lastTime;
         if (gap < 0) //phone was restarted
         {
-            gap = Player.TIMEToAddEnergy * Player.MAXEnergy;
+            gap = Constants.TimeToAddEnergy * Constants.MaxEnergy;
         }
         return (int)gap;
     }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Assets.Scripts;
+using Assets.Scripts.Entities;
 
 public class MenuManager : MonoBehaviour
 {
@@ -14,7 +15,7 @@ public class MenuManager : MonoBehaviour
 
     private void Start()
     {
-        _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
+        _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
         _levelSelector.Initialize(_energyManager,_screenPresenter);
     }
 
@@ -36,7 +37,7 @@ public class MenuManager : MonoBehaviour
         else
         {
             _save.LoadLastSave();
-            _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
+            _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
         }
     }
     private void OnApplicationQuit()

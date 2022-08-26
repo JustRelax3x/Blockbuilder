@@ -42,24 +42,23 @@ public class Block : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (CompareTag("Block"))
+        if (!CompareTag("Block")) return;
+
+        if (collision.CompareTag("Right") || collision.CompareTag("Left"))
         {
-            
-            if (collision.CompareTag("Right") || collision.CompareTag("Left"))
-            {
-                BlockColor collisionColor = collision.GetComponent<Block>().BlockColor;
-                if (collisionColor == BlockColor.Black || BlockColor == BlockColor.Black || collisionColor == BlockColor )
-                Dash?.Invoke(gameObject, collision.CompareTag("Right"));
-            }
-            else if (collision.CompareTag("Goal"))
-            {
-                ReachedGoal?.Invoke(collision.GetComponent<Goal>(), this);
-            }
-            else if (collision.CompareTag("Empty"))
-            {
-                ReachedEmpty?.Invoke(collision.gameObject, this); 
-            }
+            BlockColor collisionColor = collision.GetComponent<Block>().BlockColor;
+            if (collisionColor == BlockColor.Black || BlockColor == BlockColor.Black || collisionColor == BlockColor )
+            Dash?.Invoke(gameObject, collision.CompareTag("Right"));
         }
+        else if (collision.CompareTag("Goal"))
+        {
+            ReachedGoal?.Invoke(collision.GetComponent<Goal>(), this);
+        }
+        else if (collision.CompareTag("Empty"))
+        {
+            ReachedEmpty?.Invoke(collision.gameObject, this); 
+        }
+        
     }
 }
 
