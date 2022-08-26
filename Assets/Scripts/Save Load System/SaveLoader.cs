@@ -6,14 +6,15 @@ using UnityEngine.SceneManagement;
 public class SaveLoader : MonoBehaviour
 {
     private SaveSystem _save = new SaveSystem();
-    void Start()
+
+    private void Start()
     {
         MobileAds.Initialize(initStatus => { });
         Assets.SimpleLocalization.LocalizationManager.Read();
         StartCoroutine(LoadAsync());
     }
 
-    IEnumerator LoadAsync()
+    private IEnumerator LoadAsync()
     {
         string scene = "Game";
         if (_save.LoadLastSave()) scene = "Menu";

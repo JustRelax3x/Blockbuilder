@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Window_Confetti : MonoBehaviour {
-
+public class Window_Confetti : MonoBehaviour
+{
     [SerializeField] private Transform pfConfetti;
     [SerializeField] private Color[] colorArray;
 
@@ -12,7 +11,8 @@ public class Window_Confetti : MonoBehaviour {
     private float spawnTimer;
     private const float SPAWN_TIMER_MAX = 0.2f;
 
-    private void Update() {
+    private void Update()
+    {
         if (confettiList.Count > 0)
         {
             foreach (Confetti confetti in confettiList)
@@ -25,13 +25,15 @@ public class Window_Confetti : MonoBehaviour {
         }
 
         spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0f) {
+        if (spawnTimer <= 0f)
+        {
             spawnTimer += SPAWN_TIMER_MAX;
             SpawnConfetti();
         }
     }
 
-    private void SpawnConfetti() {
+    private void SpawnConfetti()
+    {
         float width = transform.GetComponent<RectTransform>().rect.width;
         float height = transform.GetComponent<RectTransform>().rect.height;
         Vector2 anchoredPosition = new Vector2(Random.Range(-width / 2f, width / 2f), height / 2f);
@@ -41,13 +43,13 @@ public class Window_Confetti : MonoBehaviour {
     }
 
     public void Clear()
-    { 
+    {
         foreach (var v in confettiList) v.Die();
         confettiList.Clear();
     }
 
-    private class Confetti {
-
+    private class Confetti
+    {
         private Transform transform;
         private RectTransform rectTransform;
         private Vector2 anchoredPosition;
@@ -56,9 +58,11 @@ public class Window_Confetti : MonoBehaviour {
         private Vector2 moveAmount;
         private float minimumY;
 
-        public void Die() { Destroy(transform.gameObject); }
+        public void Die()
+        { Destroy(transform.gameObject); }
 
-        public Confetti(Transform prefab, Transform container, Vector2 anchoredPosition, Color color, float minimumY) {
+        public Confetti(Transform prefab, Transform container, Vector2 anchoredPosition, Color color, float minimumY)
+        {
             this.anchoredPosition = anchoredPosition;
             this.minimumY = minimumY;
             transform = Instantiate(prefab, container);
@@ -77,22 +81,23 @@ public class Window_Confetti : MonoBehaviour {
             transform.GetComponent<Image>().color = color;
         }
 
-        public bool Update() {
+        public bool Update()
+        {
             anchoredPosition += moveAmount * Time.deltaTime;
             rectTransform.anchoredPosition = anchoredPosition;
 
             euler.z += eulerSpeed * Time.deltaTime;
             transform.localEulerAngles = euler;
 
-            if (anchoredPosition.y < minimumY) {
+            if (anchoredPosition.y < minimumY)
+            {
                 Destroy(transform.gameObject);
                 return true;
-            } else {
+            }
+            else
+            {
                 return false;
             }
         }
-
-
     }
-
 }

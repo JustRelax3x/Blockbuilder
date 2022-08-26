@@ -5,6 +5,7 @@ using System.Text;
 public static class Helper
 {
     private static readonly string hash = "yV#g$3%r!qas";
+
     //Encrypt
     public static string Encrypt(string input)
     {
@@ -20,6 +21,7 @@ public static class Helper
             }
         }
     }
+
     //Decrypt
     public static string Decrypt(string input)
     {

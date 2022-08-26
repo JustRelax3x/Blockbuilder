@@ -9,30 +9,41 @@ public class LevelPresenter : MonoBehaviour
 {
     [SerializeField]
     private GameObject _blockPrefab;
+
     [SerializeField]
     private GameObject _goalPrefab;
+
     [SerializeField]
     private GameObject _rightArrowPrefab;
+
     [SerializeField]
     private GameObject _leftArrowPrefab;
+
     [SerializeField]
     private GameObject _emptyPrefab;
+
     [SerializeField]
     private GameObject _crane;
+
     [SerializeField]
     private GameObject _craneSlot;
+
     [SerializeField]
     private Transform _canvas;
+
     [SerializeField]
     private TextAsset[] _levels;
+
     [SerializeField]
     private Transform[] _slots;
+
     [SerializeField]
     private Transform _upSlot;
+
     [SerializeField]
     private ParticleHandler _particleHandler;
 
-    private Vector2Int _sizeXY = new Vector2Int(Constants.SizeX,Constants.SizeY);
+    private Vector2Int _sizeXY = new Vector2Int(Constants.SizeX, Constants.SizeY);
     private bool[] _blocks;
     private bool[] _activeGoals;
     private bool[] _arrows;
@@ -53,14 +64,15 @@ public class LevelPresenter : MonoBehaviour
     private short _moved;
 
     private LevelReader _levelReader = new LevelReader();
-    private LevelGenerator _levelGenerator = new LevelGenerator(); 
+    private LevelGenerator _levelGenerator = new LevelGenerator();
 
     private List<GameObject> _spawnedObjects = new List<GameObject>();
     private List<GameObject> _usedObjects = new List<GameObject>();
 
     public int LevelLength => _levels.Length;
 
-    public event Action<int,bool> GameOver;
+    public event Action<int, bool> GameOver;
+
     public void GetLevelData(int level)
     {
         _blocks = new bool[_sizeXY.x * _sizeXY.y];
@@ -70,13 +82,14 @@ public class LevelPresenter : MonoBehaviour
         _blockToBeDropped = new List<BlockColor>();
         if (level < 0)
         {
-            _levelGenerator.Generate(_sizeXY,_blocks,_activeGoals,_colors,_arrows);
+            _levelGenerator.Generate(_sizeXY, _blocks, _activeGoals, _colors, _arrows);
         }
         else
         {
-            _levelReader.Read(_levels,level,_sizeXY,_blocks,_activeGoals,_colors,_arrows);
+            _levelReader.Read(_levels, level, _sizeXY, _blocks, _activeGoals, _colors, _arrows);
         }
     }
+
     public void BuildLevel()
     {
         BeginNewGame();
@@ -87,53 +100,40 @@ public class LevelPresenter : MonoBehaviour
         {
             for (int i = 0; i < _sizeXY.x; i++)
             {
-                if (_blocks[i + y * _sizeXY.x])
+                int slotIndex = i + y * _sizeXY.x;
+                if (!_blocks[slotIndex] && !_activeGoals[slotIndex] && !_arrows[slotIndex])
+                    continue;
+                slot = _slots[i].position;
+                slot.y += y * _upperSlot;
+                if (_blocks[slotIndex])
                 {
-                    slot = _slots[i].position;
-                    slot.y += y * _upperSlot;
-                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
-                    if (y == _sizeXY.y - 1)
-                    {
-                        slot.y += _upperSlot;
-                        Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
-                    }
-                    else
-                    {
-                        if (!_activeGoals[i + (y + 1) * _sizeXY.x] && !_blocks[i + (y + 1) * _sizeXY.x])
-                        {
-                            slot.y += _upperSlot;
-                            Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
-                        }
-                    }
+                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
+                    if (y != _sizeXY.y - 1 && (_activeGoals[i + (y + 1) * _sizeXY.x] || _blocks[i + (y + 1) * _sizeXY.x]))
+                        continue;
+                    slot.y += _upperSlot;
+                    Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
                 }
-                else if (_activeGoals[i + y * _sizeXY.x])
+                else if (_activeGoals[slotIndex])
                 {
-                    if (y > 0)
+                    if (y > 0 && (!_blocks[i + (y - 1) * _sizeXY.x]))
                     {
-                        if (_activeGoals[i + (y - 1) * _sizeXY.x] || !_blocks[i + (y - 1) * _sizeXY.x])
-                        {
-                            continue;
-                        }
+                        continue;
                     }
-                    slot = _slots[i].position;
-                    slot.y += y * _upperSlot;
-                    SpawnGoal(slot, i + y * _sizeXY.x);
+                    SpawnGoal(slot, slotIndex);
                 }
-                else if (_arrows[i + y * _sizeXY.x])
+                else if (_arrows[slotIndex])
                 {
-                    slot = _slots[i].position;
-                    slot.y += y * _upperSlot;
                     if (i > _sizeXY.x / 2f)
                     {
                         int index = _sizeXY.x - i - 1;
                         slot.x += (_slots[1].position.x - _slots[0].position.x) / 2f * index;
                         slot.y += 0.1f; //left arrows always should be higher
-                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
+                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                     else
                     {
                         slot.x -= (_slots[1].position.x - _slots[0].position.x) / 2f * (i);
-                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[i + y * _sizeXY.x];
+                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                 }
             }
@@ -144,12 +144,13 @@ public class LevelPresenter : MonoBehaviour
             slot = _slots[i].position;
             Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
         }
-        _craneSlot.GetComponent<Block>().BlockColor =_blockToBeDropped[_goalCompleted];
+        _craneSlot.GetComponent<Block>().BlockColor = _blockToBeDropped[_goalCompleted];
         _craneAnimator = _crane.GetComponent<Animator>();
         _startcranePos = _crane.transform.localPosition;
         _craneAnimator.SetTrigger("Take");
         _dropped = false;
     }
+
     public void Drop()
     {
         if (_dropped) return;
@@ -177,21 +178,24 @@ public class LevelPresenter : MonoBehaviour
         b.Dash += BlockDash;
         _spawnedObjects.Add(b.gameObject);
     }
+
     public void RestartLevel()
     {
         Recycle();
         BeginNewGame();
         CraneRefill();
-    } 
+    }
 
-    private void BeginNewGame() {
+    private void BeginNewGame()
+    {
         _goalCompleted = 0;
         _hp = _maxHp;
     }
 
     public void Recycle()
     {
-        foreach (GameObject v in _spawnedObjects) {
+        foreach (GameObject v in _spawnedObjects)
+        {
             Destroy(v);
         }
         _spawnedObjects.Clear();
@@ -210,8 +214,9 @@ public class LevelPresenter : MonoBehaviour
             if (GameOverCheck()) return;
             Vibration.VibratePeek();
         }
-        int index = goal.GetIndex;
-         index += _sizeXY.x;
+        Unsubscribe(block);
+        if (GameOverCheck()) return;
+        int index = goal.GetIndex + _sizeXY.x;
         if (_activeGoals[index])
         {
             SpawnGoal(goal.gameObject.transform.position + new Vector3(0f, _upperSlot, 0f), index, true);
@@ -220,18 +225,13 @@ public class LevelPresenter : MonoBehaviour
         {
             SpawnEmpty(goal.gameObject.transform.position + new Vector3(0f, _upperSlot, 0f));
         }
-        Unsubscribe(block);
-        if (_goalCompleted == _goalCounter)
-        {
-            GameOver?.Invoke(_maxHp - _hp, true);
-            return;
-        }
         _particleHandler.SetSuccessParticle(goal.transform.localPosition, goal.GetComponent<Image>().color);
         CraneRefill();
     }
+
     private void BlockReachedEmpty(GameObject empty, Block block)
     {
-        _usedObjects.Add(empty);  
+        _usedObjects.Add(empty);
         empty.SetActive(false);
         Unsubscribe(block);
         Vibration.VibratePeek();
@@ -247,7 +247,7 @@ public class LevelPresenter : MonoBehaviour
         GameObject ob = Instantiate(_goalPrefab, position, Quaternion.identity, _canvas);
         ob.GetComponent<Goal>().Index(index);
         ob.GetComponent<Block>().BlockColor = _colors[index];
-        _blockToBeDropped.Add(_colors[index]); 
+        _blockToBeDropped.Add(_colors[index]);
         _goalCounter++;
         if (lateSpawn) _spawnedObjects.Add(ob);
     }
@@ -257,15 +257,14 @@ public class LevelPresenter : MonoBehaviour
         GameObject ob = Instantiate(_emptyPrefab, position, Quaternion.identity, _canvas);
         _spawnedObjects.Add(ob);
     }
+
     private bool GameOverCheck()
     {
-        if (_hp <= 0)
-        {
-            GameOver?.Invoke(_maxHp - _hp, false);
-            return true;
-        }
-        return false;
+        if (_hp > 0 && _goalCompleted != _goalCounter) return false;
+        GameOver?.Invoke(_maxHp - _hp, _goalCompleted == _goalCounter);
+        return true;
     }
+
     private void CraneRefill()
     {
         _crane.transform.localPosition = _startcranePos;
@@ -287,29 +286,24 @@ public class LevelPresenter : MonoBehaviour
         float dash = _slots[1].position.x - _slots[0].position.x;
         if (right)
         {
-            if (block.transform.position.x < _slots[_sizeXY.x - 1].position.x - dash / 2)
+            if (block.transform.position.x >= _slots[_sizeXY.x - 1].position.x - dash / 2) return;
+            if (_moved == 0)
             {
-                if (_moved == 0)
-                {
-                    block.transform.position += new Vector3(dash, 0f);
-                }
-                else
-                {
-                    _moved--;
-                }
-            }
-        }
-        else
-        {
-            if (block.transform.position.x > _slots[0].position.x + dash / 2)
-            {
-                block.transform.position -= new Vector3(dash, 0f);
-
+                block.transform.position += new Vector3(dash, 0f);
             }
             else
             {
-                _moved++;
+                _moved--;
             }
+            return;
+        }
+        if (block.transform.position.x > _slots[0].position.x + dash / 2)
+        {
+            block.transform.position -= new Vector3(dash, 0f);
+        }
+        else
+        {
+            _moved++;
         }
     }
 }

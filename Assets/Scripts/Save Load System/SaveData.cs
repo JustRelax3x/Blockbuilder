@@ -1,4 +1,3 @@
-
 [System.Serializable]
 public class SaveData
 {
@@ -6,5 +5,4 @@ public class SaveData
     public bool Volume, Vibration;
     public short[] Stars = new short[100];
     public long Time;
-
 }

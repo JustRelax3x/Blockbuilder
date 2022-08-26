@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
 public class ScreenAnimator : MonoBehaviour
@@ -7,7 +7,6 @@ public class ScreenAnimator : MonoBehaviour
     private Animator _animator;
 
     public event Action AnimationDone;
-
 
     private void Awake()
     {
@@ -19,17 +18,19 @@ public class ScreenAnimator : MonoBehaviour
         if (right) _animator.SetTrigger("OutR");
         else _animator.SetTrigger("OutL");
     }
-   
+
     public void OpenScreen(bool right)
     {
         gameObject.SetActive(true);
         if (right) _animator.SetTrigger("InR");
         else _animator.SetTrigger("InL");
     }
+
     protected void TurnOff()
     {
         gameObject.SetActive(false);
     }
+
     protected void AnimationIsDone()
     {
         AnimationDone?.Invoke();

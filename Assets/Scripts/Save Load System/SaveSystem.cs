@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities;
 using System;
 using UnityEngine;
 
@@ -5,6 +6,7 @@ public class SaveSystem
 {
     private SaveData _save = new SaveData();
     private TimeHandler _time = new TimeHandler();
+
     public bool LoadLastSave()
     {
         if (PlayerPrefs.HasKey("Save"))
@@ -19,9 +21,10 @@ public class SaveSystem
             }
             return true;
         }
-            StartGame();
-            return false;
+        StartGame();
+        return false;
     }
+
     private void PushSavedData()
     {
         Player.MaxLevel = _save.MaxLevel;
@@ -32,17 +35,17 @@ public class SaveSystem
         Player.Language = _save.Language;
         Assets.SimpleLocalization.LocalizationManager.ChangeLanguage(Player.Language);
         _save.Stars.CopyTo(Player.StarsInLevel, 0);
-        int[] gap =_time.MeasureEnergyGap(_save.Time);
+        int[] gap = _time.MeasureEnergyGap(_save.Time);
         Player.Energy = _save.Energy + gap[0];
         Player.TimeLeftToAddEnergy = _save.TimeLeft + gap[1];
-        Player.LastTimeClosed = _save.Time; 
+        Player.LastTimeClosed = _save.Time;
     }
 
     public void SaveData()
     {
         _save.MaxLevel = Player.MaxLevel;
         _save.InfinityLevel = Player.InfinityLevel;
-        _save.StarsNumber =  Player.StarsNumber;
+        _save.StarsNumber = Player.StarsNumber;
         _save.Vibration = Player.Vibration;
         _save.Volume = Player.Volume;
         _save.Energy = Player.Energy;
@@ -61,11 +64,9 @@ public class SaveSystem
         Player.Volume = false;
         Player.Vibration = false;
         Player.StarsInLevel[0] = 0;
-        Player.Energy = Player.MAXEnergy;
-        Player.TimeLeftToAddEnergy = Player.TIMEToAddEnergy;
+        Player.Energy = Constants.MaxEnergy;
+        Player.TimeLeftToAddEnergy = Constants.TimeToAddEnergy;
         Player.LastTimeClosed = 0;
         Player.Language = 0;
     }
-
-
 }

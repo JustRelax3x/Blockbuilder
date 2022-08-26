@@ -1,12 +1,15 @@
-using UnityEngine;
 using Assets.Scripts;
+using Assets.Scripts.Entities;
+using UnityEngine;
 
 public class MenuManager : MonoBehaviour
 {
     [SerializeField]
     private EnergySystemManager _energyManager;
+
     [SerializeField]
     private LevelSelector _levelSelector;
+
     [SerializeField]
     private MenuScreenPresenter _screenPresenter;
 
@@ -14,8 +17,8 @@ public class MenuManager : MonoBehaviour
 
     private void Start()
     {
-        _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
-        _levelSelector.Initialize(_energyManager,_screenPresenter);
+        _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
+        _levelSelector.Initialize(_energyManager, _screenPresenter);
     }
 
     private void Update()
@@ -36,9 +39,10 @@ public class MenuManager : MonoBehaviour
         else
         {
             _save.LoadLastSave();
-            _energyManager.Initialize(Player.Energy, Player.TIMEToAddEnergy, Player.MAXEnergy, Player.TimeLeftToAddEnergy);
+            _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
         }
     }
+
     private void OnApplicationQuit()
     {
         _save.SaveData();

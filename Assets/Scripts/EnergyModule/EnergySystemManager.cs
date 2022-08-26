@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Entities;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -13,7 +14,6 @@ namespace Assets.Scripts
 
         private bool _adIsActivated = false;
 
-
         public void Initialize(int energy, int timeToAddEnergy, int maxEnergy, int timeLeft)
         {
             int extraEnergy = timeLeft / timeToAddEnergy + energy;
@@ -24,11 +24,10 @@ namespace Assets.Scripts
             else
             {
                 _energyModel.AddEnergy(extraEnergy);
-            } 
+            }
             _energyModel._energyChanged += EnergyValueUpdater;
             _energyModel._timeLeftChanged += TimeLeftUpdater;
             ActivateUI();
-            SimpleLocalization.LocalizationManager.LocalizationChanged += LanguageControl;
         }
 
         public bool TryUseEnergy(int amount = 1)
@@ -63,7 +62,7 @@ namespace Assets.Scripts
                 _unscaledTime = 0;
             }
         }
-        
+
         private void EarnedEnergyReward()
         {
             _energyModel.AddEnergy(_energyModel.MaxEnergy);
@@ -72,20 +71,21 @@ namespace Assets.Scripts
             _adIsActivated = false;
         }
 
-        private void EnergyValueUpdater() 
+        private void EnergyValueUpdater()
         {
-            _energyUI.Energy(_energyModel.Energy,_energyModel.MaxEnergy);
+            _energyUI.Energy(_energyModel.Energy, _energyModel.MaxEnergy);
             Player.Energy = _energyModel.Energy;
         }
 
         private short counter = 0;
-        private void TimeLeftUpdater(int timeLeft=-1)
+
+        private void TimeLeftUpdater(int timeLeft = -1)
         {
             if (!_energyModel.IsFull)
             {
                 _energyUI.Time(timeLeft);
                 counter++;
-                if(counter == 5)
+                if (counter == 5)
                 {
                     Player.TimeLeftToAddEnergy = timeLeft;
                     counter = 0;
@@ -94,22 +94,14 @@ namespace Assets.Scripts
             else
             {
                 _energyUI.Time(-1);
-                Player.TimeLeftToAddEnergy = Player.TIMEToAddEnergy-1;
+                Player.TimeLeftToAddEnergy = Constants.TimeToAddEnergy - 1;
             }
-        }
-
-        private void LanguageControl()
-        {
-            if (!_energyModel.IsFull) return;
-            _energyUI.Time(-1);
         }
 
         public void Recycle()
         {
             _energyModel._energyChanged -= EnergyValueUpdater;
             _energyModel._timeLeftChanged -= TimeLeftUpdater;
-            SimpleLocalization.LocalizationManager.LocalizationChanged -= LanguageControl;
         }
-
     }
 }
