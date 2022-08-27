@@ -6,18 +6,18 @@ namespace Assets.Scripts
 {
     internal class EnergyModel
     {
-        private int _currentEnergy;
-        private readonly int _maxEnergy, _timeToAddEnergy;
+        private int _currentEnergy; 
 
+        private readonly int _timeToAddEnergy, _maxEnergy;
+        
         private State _state;
-
         private enum State
         {
             Adding,
             Full
         }
 
-        public int _currentEnergyTimeLeft { get; private set; }
+        public int _currentEnergyTimeLeft { get; private set; } 
 
         public int Energy => _currentEnergy;
         public int MaxEnergy => _maxEnergy;
@@ -28,7 +28,7 @@ namespace Assets.Scripts
 
         public bool IsFull => _state == State.Full;
 
-        public EnergyModel(int energy, int timeToAddEnergy, int maxEnergy, int timeLeftToAddEnergy)
+        public EnergyModel(int energy, int timeToAddEnergy, int maxEnergy, int timeLeftToAddEnergy) 
         {
             _state = State.Adding;
             _maxEnergy = maxEnergy;
@@ -60,35 +60,36 @@ namespace Assets.Scripts
                 _timeLeftChanged?.Invoke(-1);
                 return;
             }
-            _currentEnergyTimeLeft -= sec;
+            _currentEnergyTimeLeft -= sec; 
             _timeLeftChanged?.Invoke(_currentEnergyTimeLeft);
             if (_currentEnergyTimeLeft <= 0)
             {
                 AddEnergy(1);
                 _currentEnergyTimeLeft = _timeToAddEnergy;
             }
+           
         }
 
         public void AddEnergy(int amount)
         {
-            if (amount <= 0 || _state == State.Full) return;
+            if (amount <= 0 || _state==State.Full) return;
             _currentEnergy += amount;
             if (_currentEnergy >= _maxEnergy)
             {
                 _currentEnergy = _maxEnergy;
                 _state = State.Full;
             }
-            _energyChanged?.Invoke();
+             _energyChanged?.Invoke();
         }
-
-        public bool TryUseEnergy(int amount)
+        public bool TryUseEnergy(int amount) 
         {
             if (amount <= 0 || _currentEnergy < amount) return false;
             _currentEnergy -= amount;
             if (_state == State.Full) _state = State.Adding;
             _energyChanged?.Invoke();
-
+     
             return true;
         }
+
     }
 }

@@ -113,7 +113,7 @@ internal class LevelPresenter
                     SpawnGoal(slot, slotIndex);
                 }
                 else if (_arrows[slotIndex])
-                {
+                {        
                     if (i > _sizeXY.x / 2f)
                     {
                         int index = _sizeXY.x - i - 1;

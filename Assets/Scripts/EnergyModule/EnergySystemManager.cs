@@ -23,7 +23,7 @@ namespace Assets.Scripts
             }
             else
             {
-                _energyModel.AddEnergy(extraEnergy);
+                _energyModel.AddEnergy(extraEnergy); 
             }
             _energyModel._energyChanged += EnergyValueUpdater;
             _energyModel._timeLeftChanged += TimeLeftUpdater;

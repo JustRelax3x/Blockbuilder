@@ -28,7 +28,7 @@ public class EnergyUI : MonoBehaviour
     private RewardedAds _adRewarded10Pause;
 
     [SerializeField]
-    private GameObject _energyParentPause;
+    private GameObject _energyParentPause;    
 
     public void Energy(int energy, int maxEnergy)
     {
@@ -69,17 +69,17 @@ public class EnergyUI : MonoBehaviour
         ad.gameObject.SetActive(false);
     }
 
-    private bool HasNoActiveUI()
+private bool HasNoActiveUI() 
     {
         return !(_energyParent.activeInHierarchy || _energyParentPause.activeInHierarchy);
-    }
+    } 
 
     private TextMeshProUGUI GetTime()
     {
         if (_energyParent.activeInHierarchy) return _timeLeft;
         return _timeLeftPause;
     }
-
+    
     private RewardedAds GetAds()
     {
         if (_energyParent.activeInHierarchy) return _adRewarded10;
