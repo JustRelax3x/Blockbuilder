@@ -1,21 +1,44 @@
 using Assets.Scripts;
 using Assets.Scripts.Entities;
+using Assets.Scripts.Game.LevelModel;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, IInstantiator
 {
-    [SerializeField]
-    private SceneFader _fader;
-
     [SerializeField]
     private GameUIHud _gameUIHud;
 
     [SerializeField]
-    private LevelPresenter _levelPresenter;
+    private EnergySystemManager _energyManager;
 
     [SerializeField]
-    private EnergySystemManager _energyManager;
+    private GameObject _crane;
+
+    [SerializeField]
+    private GameObject _craneSlot;
+
+    [SerializeField]
+    private TextAsset[] _levels;
+
+    [SerializeField]
+    private Transform[] _slots;
+
+    [SerializeField]
+    private Transform _upSlot;
+
+    [SerializeField]
+    private EntityFactory _entityFactory;
+
+    [SerializeField]
+    private ParticleSystem _smoke;
+
+    [SerializeField]
+    private ParticleSystem _star;
+
+    private ParticleHandler _particleHandler;
+
+    private LevelPresenter _levelPresenter;
 
     private SaveSystem _save = new SaveSystem();
 
@@ -30,12 +53,15 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         _playerLevel = Player.Level;
+        _particleHandler = new ParticleHandler(_smoke, _star);
+        _levelPresenter = new LevelPresenter(_entityFactory, this, _crane, _craneSlot, _levels, _slots, _upSlot, _particleHandler);
         _levelPresenter.GetLevelData(_playerLevel);
         if (_playerLevel < 0)
         {
             _playerLevel = Player.InfinityLevel;
             _infinityMode = true;
         }
+        _gameUIHud.SetPlayerInputListener(_levelPresenter.Drop);
     }
 
     private void Start()
@@ -96,10 +122,7 @@ public class GameManager : MonoBehaviour
             if (_pause) OnPause();
             _gameUIHud.ActivateUI(_playerLevel, !_infinityMode, _uiReady);
         }
-        else
-        {
-            _energyManager.ActivateUI();
-        }
+        _energyManager.ActivateUI();
     }
 
     private void StartCurrentLevel()
@@ -164,5 +187,15 @@ public class GameManager : MonoBehaviour
         _energyManager.Recycle();
         _levelPresenter.Recycle();
         _save.SaveData();
+    }
+
+    public GameObject Instantiate(GameObject gameObject, Vector3 position, Quaternion quaternion)
+    {
+        return Instantiate(gameObject, position, quaternion, _gameUIHud.GetDynamicCanvas());
+    }
+
+    public void DestroyObject(GameObject gameObject)
+    {
+        Destroy(gameObject);
     }
 }

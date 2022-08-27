@@ -2,18 +2,18 @@
 
 namespace Assets.Scripts.Game.LevelModel
 {
-    internal class ParticleHandler : MonoBehaviour
+    internal class ParticleHandler
     {
-        [SerializeField]
         private ParticleSystem _smoke;
 
-        [SerializeField]
         private ParticleSystem _star;
 
         private ParticleSystem.MainModule _starModule;
 
-        private void OnEnable()
+        public ParticleHandler(ParticleSystem smoke, ParticleSystem star)
         {
+            _smoke = smoke;
+            _star = star;
             _starModule = _star.main;
         }
 

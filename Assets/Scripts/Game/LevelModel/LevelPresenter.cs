@@ -5,42 +5,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LevelPresenter : MonoBehaviour
+internal class LevelPresenter
 {
-    [SerializeField]
-    private GameObject _blockPrefab;
+    private EntityFactory _entityFactory;
 
-    [SerializeField]
-    private GameObject _goalPrefab;
-
-    [SerializeField]
-    private GameObject _rightArrowPrefab;
-
-    [SerializeField]
-    private GameObject _leftArrowPrefab;
-
-    [SerializeField]
-    private GameObject _emptyPrefab;
-
-    [SerializeField]
+    private IInstantiator _instantiator;
+    
     private GameObject _crane;
-
-    [SerializeField]
+        
     private GameObject _craneSlot;
-
-    [SerializeField]
-    private Transform _canvas;
-
-    [SerializeField]
+        
     private TextAsset[] _levels;
-
-    [SerializeField]
+        
     private Transform[] _slots;
-
-    [SerializeField]
+               
     private Transform _upSlot;
-
-    [SerializeField]
+        
     private ParticleHandler _particleHandler;
 
     private Vector2Int _sizeXY = new Vector2Int(Constants.SizeX, Constants.SizeY);
@@ -73,6 +53,17 @@ public class LevelPresenter : MonoBehaviour
 
     public event Action<int, bool> GameOver;
 
+    public LevelPresenter(EntityFactory entityFactory, IInstantiator instantiator, GameObject crane, GameObject craneSlot, TextAsset[] levels, Transform[] slots, Transform upSlot, ParticleHandler particleHandler)
+    {
+        _entityFactory = entityFactory;
+        _instantiator = instantiator;
+        _crane = crane;
+        _craneSlot = craneSlot;
+        _levels = levels;
+        _slots = slots;
+        _upSlot = upSlot;
+        _particleHandler = particleHandler;
+    }
     public void GetLevelData(int level)
     {
         _blocks = new bool[_sizeXY.x * _sizeXY.y];
@@ -107,11 +98,11 @@ public class LevelPresenter : MonoBehaviour
                 slot.y += y * _upperSlot;
                 if (_blocks[slotIndex])
                 {
-                    Instantiate(_blockPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
+                    _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Block), slot, Quaternion.identity).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     if (y != _sizeXY.y - 1 && (_activeGoals[i + (y + 1) * _sizeXY.x] || _blocks[i + (y + 1) * _sizeXY.x]))
                         continue;
                     slot.y += _upperSlot;
-                    Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
+                    _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Empty), slot, Quaternion.identity);
                 }
                 else if (_activeGoals[slotIndex])
                 {
@@ -128,12 +119,12 @@ public class LevelPresenter : MonoBehaviour
                         int index = _sizeXY.x - i - 1;
                         slot.x += (_slots[1].position.x - _slots[0].position.x) / 2f * index;
                         slot.y += 0.1f; //left arrows always should be higher
-                        Instantiate(_leftArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
+                        _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.LeftArrow), slot, Quaternion.identity).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                     else
                     {
                         slot.x -= (_slots[1].position.x - _slots[0].position.x) / 2f * (i);
-                        Instantiate(_rightArrowPrefab, slot, Quaternion.identity, _canvas).GetComponent<Block>().BlockColor = _colors[slotIndex];
+                        _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.RightArrow), slot, Quaternion.identity).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                 }
             }
@@ -142,7 +133,7 @@ public class LevelPresenter : MonoBehaviour
         {
             if (_blocks[i] || _activeGoals[i]) continue;
             slot = _slots[i].position;
-            Instantiate(_emptyPrefab, slot, Quaternion.identity, _canvas);
+            _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Empty), slot, Quaternion.identity);
         }
         _craneSlot.GetComponent<Block>().BlockColor = _blockToBeDropped[_goalCompleted];
         _craneAnimator = _crane.GetComponent<Animator>();
@@ -171,7 +162,7 @@ public class LevelPresenter : MonoBehaviour
         _craneSlot.transform.position = new Vector3(_slots[index].position.x, _craneSlot.transform.position.y);
         _craneSlot.GetComponent<Image>().enabled = false;
         _craneAnimator.SetTrigger("Drop");
-        Block b = Instantiate(_blockPrefab, _craneSlot.transform.position, Quaternion.identity, _canvas).GetComponent<Block>();
+        Block b = _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Block), _craneSlot.transform.position, Quaternion.identity).GetComponent<Block>();
         b.BlockColor = _blockToBeDropped[_goalCompleted];
         b.ReachedGoal += BlockReachedGoal;
         b.ReachedEmpty += BlockReachedEmpty;
@@ -196,7 +187,7 @@ public class LevelPresenter : MonoBehaviour
     {
         foreach (GameObject v in _spawnedObjects)
         {
-            Destroy(v);
+            _instantiator.DestroyObject(v);
         }
         _spawnedObjects.Clear();
         foreach (GameObject v in _usedObjects) v.SetActive(true);
@@ -244,7 +235,7 @@ public class LevelPresenter : MonoBehaviour
 
     private void SpawnGoal(Vector3 position, int index, bool lateSpawn = false)
     {
-        GameObject ob = Instantiate(_goalPrefab, position, Quaternion.identity, _canvas);
+        GameObject ob = _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Goal), position, Quaternion.identity);
         ob.GetComponent<Goal>().Index(index);
         ob.GetComponent<Block>().BlockColor = _colors[index];
         _blockToBeDropped.Add(_colors[index]);
@@ -254,7 +245,7 @@ public class LevelPresenter : MonoBehaviour
 
     private void SpawnEmpty(Vector3 position)
     {
-        GameObject ob = Instantiate(_emptyPrefab, position, Quaternion.identity, _canvas);
+        GameObject ob = _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Empty), position, Quaternion.identity);
         _spawnedObjects.Add(ob);
     }
 

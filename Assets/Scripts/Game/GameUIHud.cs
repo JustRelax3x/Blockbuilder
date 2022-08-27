@@ -43,6 +43,12 @@ public class GameUIHud : MonoBehaviour
     [SerializeField]
     private Window_Confetti _confetti;
 
+    [SerializeField]
+    private Button _playerInput;
+
+    [SerializeField]
+    private Transform _canvasDynamic;
+
     private Coroutine _turnOffOnClick;
     private Coroutine _vibroSrars;
 
@@ -133,6 +139,16 @@ public class GameUIHud : MonoBehaviour
         };
         float clipLength = _ggPanel.GetComponent<Animation>().GetClip("GG").length;
         StartCoroutine(AnimationGG(clipLength, stars));
+    }
+
+    public void SetPlayerInputListener(UnityEngine.Events.UnityAction action)
+    {
+        _playerInput.onClick.AddListener(action);
+    }
+
+    public Transform GetDynamicCanvas()
+    {
+        return _canvasDynamic;
     }
 
     private IEnumerator VibroStars(int seconds)
