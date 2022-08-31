@@ -17,7 +17,7 @@ namespace Assets.Scripts
             Full
         }
 
-        public int _currentEnergyTimeLeft { get; private set; } 
+        public int CurrentEnergyTimeLeft { get; private set; } 
 
         public int Energy => _currentEnergy;
         public int MaxEnergy => _maxEnergy;
@@ -50,7 +50,7 @@ namespace Assets.Scripts
                 timeLeftToAddEnergy -= _timeToAddEnergy;
                 AddEnergy(1);
             }
-            _currentEnergyTimeLeft = timeLeftToAddEnergy;
+            CurrentEnergyTimeLeft = timeLeftToAddEnergy;
         }
 
         public void Ticked(int sec = 1)
@@ -60,12 +60,12 @@ namespace Assets.Scripts
                 _timeLeftChanged?.Invoke(-1);
                 return;
             }
-            _currentEnergyTimeLeft -= sec; 
-            _timeLeftChanged?.Invoke(_currentEnergyTimeLeft);
-            if (_currentEnergyTimeLeft <= 0)
+            CurrentEnergyTimeLeft -= sec; 
+            _timeLeftChanged?.Invoke(CurrentEnergyTimeLeft);
+            if (CurrentEnergyTimeLeft <= 0)
             {
                 AddEnergy(1);
-                _currentEnergyTimeLeft = _timeToAddEnergy;
+                CurrentEnergyTimeLeft = _timeToAddEnergy;
             }
            
         }

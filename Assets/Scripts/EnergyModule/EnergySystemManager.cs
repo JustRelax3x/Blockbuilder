@@ -44,7 +44,7 @@ namespace Assets.Scripts
         public void ActivateUI()
         {
             EnergyValueUpdater();
-            TimeLeftUpdater();
+            TimeLeftUpdater(_energyModel.CurrentEnergyTimeLeft);
             if (_energyModel.Energy == 0 && !_adIsActivated)
             {
                 _energyUI.ActivateAd(EarnedEnergyReward);
