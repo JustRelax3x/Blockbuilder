@@ -6,11 +6,13 @@ public class Block : MonoBehaviour
     private BlockColor _blockColor;
     private Image _image;
 
+    public short moved = 0;
+
     public event System.Action<Goal, Block> ReachedGoal;
 
     public event System.Action<GameObject, Block> ReachedEmpty;
 
-    public event System.Action<GameObject, bool> Dash;
+    public event System.Action<Block, bool> Dash;
 
     public BlockColor BlockColor
     {
@@ -55,7 +57,7 @@ public class Block : MonoBehaviour
         {
             BlockColor collisionColor = collision.GetComponent<Block>().BlockColor;
             if (collisionColor == BlockColor.Black || BlockColor == BlockColor.Black || collisionColor == BlockColor)
-                Dash?.Invoke(gameObject, collision.CompareTag("Right"));
+                Dash?.Invoke(this, collision.CompareTag("Right"));
         }
         else if (collision.CompareTag("Goal"))
         {

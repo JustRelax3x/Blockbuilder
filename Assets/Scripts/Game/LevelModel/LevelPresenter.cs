@@ -10,38 +10,27 @@ internal class LevelPresenter
     private EntityFactory _entityFactory;
 
     private IInstantiator _instantiator;
-    
-    private GameObject _crane;
-        
-    private GameObject _craneSlot;
         
     private TextAsset[] _levels;
-        
-    private Transform[] _slots;
-               
-    private Transform _upSlot;
+
+    private CraneHandler _craneHandler;
         
     private ParticleHandler _particleHandler;
 
     private Vector2Int _sizeXY = new Vector2Int(Constants.SizeX, Constants.SizeY);
-    private bool[] _blocks;
-    private bool[] _activeGoals;
-    private bool[] _arrows;
-    private BlockColor[] _colors;
-    private List<BlockColor> _blockToBeDropped;
+    private bool[] _blocks = new bool[Constants.SizeX * Constants.SizeY];
+    private bool[] _activeGoals = new bool[Constants.SizeX * Constants.SizeY];
+    private bool[] _arrows = new bool[Constants.SizeX * Constants.SizeY];
+    private BlockColor[] _colors = new BlockColor[Constants.SizeX * Constants.SizeY];
+    private List<BlockColor> _blockToBeDropped = new List<BlockColor>();
 
-    private short _goalCounter;
-    private short _goalCompleted;
-
-    private readonly short _maxHp = Constants.MaxHp;
-    private short _hp;
+    private short _goalCounter, _goalCompleted, _hp;
     private float _upperSlot;
-
-    private Animator _craneAnimator;
     private bool _dropped;
 
-    private Vector3 _startcranePos;
-    private short _moved;
+    private readonly short _maxHp = Constants.MaxHp;
+    private readonly Transform[] _slots;
+    private readonly Transform _upSlot;
 
     private LevelReader _levelReader = new LevelReader();
     private LevelGenerator _levelGenerator = new LevelGenerator();
@@ -57,33 +46,20 @@ internal class LevelPresenter
     {
         _entityFactory = entityFactory;
         _instantiator = instantiator;
-        _crane = crane;
-        _craneSlot = craneSlot;
         _levels = levels;
         _slots = slots;
         _upSlot = upSlot;
+        _craneHandler = new CraneHandler(crane,craneSlot);
         _particleHandler = particleHandler;
     }
     public void GetLevelData(int level)
     {
-        _blocks = new bool[_sizeXY.x * _sizeXY.y];
-        _activeGoals = new bool[_sizeXY.x * _sizeXY.y];
-        _arrows = new bool[_sizeXY.x * _sizeXY.y];
-        _colors = new BlockColor[_sizeXY.x * _sizeXY.y];
-        _blockToBeDropped = new List<BlockColor>();
-        if (level < 0)
-        {
-            _levelGenerator.Generate(_sizeXY, _blocks, _activeGoals, _colors, _arrows);
-        }
-        else
-        {
-            _levelReader.Read(_levels, level, _sizeXY, _blocks, _activeGoals, _colors, _arrows);
-        }
+        if (level < 0) _levelGenerator.Generate(_sizeXY, _blocks, _activeGoals, _colors, _arrows);
+        else _levelReader.Read(_levels, level, _sizeXY, _blocks, _activeGoals, _colors, _arrows);
     }
 
     public void BuildLevel()
     {
-        BeginNewGame();
         _goalCounter = 0;
         _upperSlot = _upSlot.position.y - _slots[0].position.y;
         Vector3 slot;
@@ -113,17 +89,18 @@ internal class LevelPresenter
                     SpawnGoal(slot, slotIndex);
                 }
                 else if (_arrows[slotIndex])
-                {        
+                {
+                    float dx = _slots[1].position.x - _slots[0].position.x;
                     if (i > _sizeXY.x / 2f)
                     {
                         int index = _sizeXY.x - i - 1;
-                        slot.x += (_slots[1].position.x - _slots[0].position.x) / 2f * index;
+                        slot.x += dx / 2f * index;
                         slot.y += 0.1f; //left arrows always should be higher
                         _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.LeftArrow), slot, Quaternion.identity).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                     else
                     {
-                        slot.x -= (_slots[1].position.x - _slots[0].position.x) / 2f * (i);
+                        slot.x -= dx / 2f * (i);
                         _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.RightArrow), slot, Quaternion.identity).GetComponent<Block>().BlockColor = _colors[slotIndex];
                     }
                 }
@@ -135,52 +112,23 @@ internal class LevelPresenter
             slot = _slots[i].position;
             _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Empty), slot, Quaternion.identity);
         }
-        _craneSlot.GetComponent<Block>().BlockColor = _blockToBeDropped[_goalCompleted];
-        _craneAnimator = _crane.GetComponent<Animator>();
-        _startcranePos = _crane.transform.localPosition;
-        _craneAnimator.SetTrigger("Take");
-        _dropped = false;
+        BeginNewGame();
     }
 
     public void Drop()
     {
         if (_dropped) return;
-        _moved = 0;
-        float slot = _craneSlot.transform.position.x;
-        float minDistance = Mathf.Abs(slot - _slots[0].position.x);
-        int index = 0;
-        for (int i = 1; i < _sizeXY.x; i++)
-        {
-            if (minDistance > Mathf.Abs(slot - _slots[i].position.x))
-            {
-                minDistance = Mathf.Abs(slot - _slots[i].position.x);
-                index = i;
-            }
-        }
         _dropped = true;
-        _crane.transform.position = new Vector3(_slots[index].position.x, _crane.transform.position.y);
-        _craneSlot.transform.position = new Vector3(_slots[index].position.x, _craneSlot.transform.position.y);
-        _craneSlot.GetComponent<Image>().enabled = false;
-        _craneAnimator.SetTrigger("Drop");
-        Block b = _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Block), _craneSlot.transform.position, Quaternion.identity).GetComponent<Block>();
-        b.BlockColor = _blockToBeDropped[_goalCompleted];
-        b.ReachedGoal += BlockReachedGoal;
-        b.ReachedEmpty += BlockReachedEmpty;
-        b.Dash += BlockDash;
-        _spawnedObjects.Add(b.gameObject);
+        _craneHandler.SetDropPosX(_slots[GetClosestXSlotIndex(_craneHandler.GetCraneSlotPos().x)].position.x);
+        SpawnBlock(_craneHandler.GetCraneSlotPos());
     }
 
-    public void RestartLevel()
+    public void BeginNewGame()
     {
         Recycle();
-        BeginNewGame();
-        CraneRefill();
-    }
-
-    private void BeginNewGame()
-    {
         _goalCompleted = 0;
         _hp = _maxHp;
+        SetNextBlock();
     }
 
     public void Recycle()
@@ -206,7 +154,6 @@ internal class LevelPresenter
             Vibration.VibratePeek();
         }
         Unsubscribe(block);
-        if (GameOverCheck()) return;
         int index = goal.GetIndex + _sizeXY.x;
         if (_activeGoals[index])
         {
@@ -216,8 +163,9 @@ internal class LevelPresenter
         {
             SpawnEmpty(goal.gameObject.transform.position + new Vector3(0f, _upperSlot, 0f));
         }
+        if (GameOverCheck()) return;
         _particleHandler.SetSuccessParticle(goal.transform.localPosition, goal.GetComponent<Image>().color);
-        CraneRefill();
+        SetNextBlock();
     }
 
     private void BlockReachedEmpty(GameObject empty, Block block)
@@ -230,7 +178,7 @@ internal class LevelPresenter
         if (GameOverCheck()) return;
         _particleHandler.SetFailedParticle(empty.transform.localPosition);
         SpawnEmpty(empty.transform.position + new Vector3(0f, _upperSlot, 0f));
-        CraneRefill();
+        SetNextBlock();
     }
 
     private void SpawnGoal(Vector3 position, int index, bool lateSpawn = false)
@@ -249,6 +197,17 @@ internal class LevelPresenter
         _spawnedObjects.Add(ob);
     }
 
+    private void SpawnBlock(Vector3 position)
+    {
+        Block b = _instantiator.Instantiate(_entityFactory.GetEntity(EntityFactory.Entity.Block), position, Quaternion.identity).GetComponent<Block>();
+        b.BlockColor = _blockToBeDropped[_goalCompleted];
+        b.moved = 0;
+        b.ReachedGoal += BlockReachedGoal;
+        b.ReachedEmpty += BlockReachedEmpty;
+        b.Dash += BlockDash;
+        _spawnedObjects.Add(b.gameObject);
+    }
+
     private bool GameOverCheck()
     {
         if (_hp > 0 && _goalCompleted != _goalCounter) return false;
@@ -256,12 +215,9 @@ internal class LevelPresenter
         return true;
     }
 
-    private void CraneRefill()
+    private void SetNextBlock()
     {
-        _crane.transform.localPosition = _startcranePos;
-        _craneAnimator.SetTrigger("Take");
-        _craneSlot.GetComponent<Image>().enabled = true;
-        _craneSlot.GetComponent<Block>().BlockColor = _blockToBeDropped[_goalCompleted];
+        _craneHandler.SetStartPos(_blockToBeDropped[_goalCompleted]);
         _dropped = false;
     }
 
@@ -272,29 +228,33 @@ internal class LevelPresenter
         block.Dash -= BlockDash;
     }
 
-    private void BlockDash(GameObject block, bool right)
+    private void BlockDash(Block block, bool right)
     {
         float dash = _slots[1].position.x - _slots[0].position.x;
         if (right)
         {
             if (block.transform.position.x >= _slots[_sizeXY.x - 1].position.x - dash / 2) return;
-            if (_moved == 0)
-            {
-                block.transform.position += new Vector3(dash, 0f);
-            }
-            else
-            {
-                _moved--;
-            }
+            if (block.moved == 0) block.transform.position += new Vector3(dash, 0f);
+            else block.moved--;
             return;
         }
         if (block.transform.position.x > _slots[0].position.x + dash / 2)
-        {
             block.transform.position -= new Vector3(dash, 0f);
-        }
-        else
+        else block.moved++;
+    }
+
+    private int GetClosestXSlotIndex(float posX)
+    {
+        float minDistance = Mathf.Abs(posX - _slots[0].position.x);
+        int index = 0;
+        for (int i = 1; i < _sizeXY.x; i++)
         {
-            _moved++;
+            if (minDistance > Mathf.Abs(posX - _slots[i].position.x))
+            {
+                minDistance = Mathf.Abs(posX - _slots[i].position.x);
+                index = i;
+            }
         }
+        return index;
     }
 }

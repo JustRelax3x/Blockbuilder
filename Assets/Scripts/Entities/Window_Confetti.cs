@@ -7,23 +7,13 @@ public class Window_Confetti : MonoBehaviour
     [SerializeField] private Transform pfConfetti;
     [SerializeField] private Color[] colorArray;
 
-    private List<Confetti> confettiList = new List<Confetti>();
+    private LinkedList<Confetti> _confettiList = new LinkedList<Confetti>();
     private float spawnTimer;
-    private const float SPAWN_TIMER_MAX = 0.2f;
+    private const float SPAWN_TIMER_MAX = 0.4f;
 
     private void Update()
     {
-        if (confettiList.Count > 0)
-        {
-            foreach (Confetti confetti in confettiList)
-            {
-                if (confetti.Update())
-                {
-                    confettiList.Remove(confetti);
-                }
-            }
-        }
-
+        CheckConfetti();
         spawnTimer -= Time.deltaTime;
         if (spawnTimer <= 0f)
         {
@@ -39,13 +29,38 @@ public class Window_Confetti : MonoBehaviour
         Vector2 anchoredPosition = new Vector2(Random.Range(-width / 2f, width / 2f), height / 2f);
         Color color = colorArray[Random.Range(0, colorArray.Length)];
         Confetti confetti = new Confetti(pfConfetti, transform, anchoredPosition, color, -height / 2f);
-        confettiList.Add(confetti);
+        _confettiList.AddLast(confetti);
+    }
+
+    public void CheckConfetti()
+    {
+        int count =_confettiList.Count;
+        if (count == 0) return;
+        var temp = _confettiList.First;
+        var tempNext = _confettiList.First;
+        for (int i=0; i < count;i++)
+        { 
+            if (i != count - 1) 
+                tempNext = temp.Next;
+            if(temp.Value.Update())
+            {
+                temp.Value.Die();
+                _confettiList.Remove(temp);
+            }
+            temp = tempNext;
+        }
     }
 
     public void Clear()
     {
-        foreach (var v in confettiList) v.Die();
-        confettiList.Clear();
+        int count = _confettiList.Count;
+        var temp = _confettiList.First;
+        for (int i = 0; i < count; i++)
+        {
+            temp.Value.Die();
+            temp = temp.Next;
+            _confettiList.RemoveFirst();
+        }
     }
 
     private class Confetti
@@ -91,7 +106,6 @@ public class Window_Confetti : MonoBehaviour
 
             if (anchoredPosition.y < minimumY)
             {
-                Destroy(transform.gameObject);
                 return true;
             }
             else

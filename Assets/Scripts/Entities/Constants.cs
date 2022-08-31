@@ -7,3 +7,9 @@
         public const int TimeToAddEnergy = 150, MaxEnergy = 10, MaxLanguage = 2;
     }
 }
+public enum GameMode
+{
+    Classic,
+    SpeedRun,
+
+}

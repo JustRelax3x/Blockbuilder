@@ -33,13 +33,7 @@ public class MenuManager : MonoBehaviour
     {
         if (pause)
         {
-            _energyManager.Recycle();
             _save.SaveData();
-        }
-        else
-        {
-            _save.LoadLastSave();
-            _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
         }
     }
 

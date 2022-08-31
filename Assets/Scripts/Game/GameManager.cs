@@ -61,7 +61,7 @@ public class GameManager : MonoBehaviour, IInstantiator
             _playerLevel = Player.InfinityLevel;
             _infinityMode = true;
         }
-        _gameUIHud.SetPlayerInputListener(_levelPresenter.Drop);
+         _gameUIHud.SetPlayerInputListener(_levelPresenter.Drop);
     }
 
     private void Start()
@@ -127,19 +127,21 @@ public class GameManager : MonoBehaviour, IInstantiator
 
     private void StartCurrentLevel()
     {
-        _levelPresenter.RestartLevel();
+        _levelPresenter.BeginNewGame();
     }
 
     public void StartNextLevel()
     {
+        if (Player.StarsInLevel[_playerLevel] == 0)
+        {
+            RestartCurrentLevel();
+            return;
+        }
         if (_energyManager.TryUseEnergy())
         {
-            if (++_playerLevel >= _levelPresenter.LevelLength && !_infinityMode)
-            {
-                _playerLevel = 0;
-            }
             if (!_infinityMode)
             {
+                if (++_playerLevel == _levelPresenter.LevelLength) _playerLevel = 0;
                 Player.Level = _playerLevel;
             }
             ActivateScene(Constants.GameScene);
@@ -163,13 +165,7 @@ public class GameManager : MonoBehaviour, IInstantiator
     {
         if (pause)
         {
-            _energyManager.Recycle();
             _save.SaveData();
-        }
-        else
-        {
-            _save.LoadLastSave();
-            _energyManager.Initialize(Player.Energy, Constants.TimeToAddEnergy, Constants.MaxEnergy, Player.TimeLeftToAddEnergy);
         }
     }
 

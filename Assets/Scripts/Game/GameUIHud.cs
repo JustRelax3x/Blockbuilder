@@ -47,6 +47,9 @@ public class GameUIHud : MonoBehaviour
     private Button _playerInput;
 
     [SerializeField]
+    private ParticleSystem _fireworks;
+
+    [SerializeField]
     private Transform _canvasDynamic;
 
     private Coroutine _turnOffOnClick;
@@ -59,7 +62,7 @@ public class GameUIHud : MonoBehaviour
         _ggPanel.SetActive(false);
         if (tutorial)
         {
-            bool flag = false;
+            bool flagPopUp = false;
             switch (level)
             {
                 case 0:
@@ -68,24 +71,24 @@ public class GameUIHud : MonoBehaviour
                     break;
 
                 case 1:
-                    flag = true;
+                    flagPopUp = true;
                     level = 0;
                     break;
 
                 case 10:
-                    flag = true;
+                    flagPopUp = true;
                     level = 1;
                     break;
 
                 case 20:
-                    flag = true;
+                    flagPopUp = true;
                     level = 2;
                     break;
 
                 default:
                     break;
             }
-            if (flag)
+            if (flagPopUp)
             {
                 _popUpScreens[level].transform.parent.gameObject.SetActive(true);
                 _popUpScreens[level].SetActive(true);
@@ -129,6 +132,9 @@ public class GameUIHud : MonoBehaviour
     public void ActivateGGUI(int stars)
     {
         _ggPanel.SetActive(true);
+        bool win = stars != 0; 
+        _fireworks.gameObject.SetActive(win);
+        _confetti.gameObject.SetActive(win);
         _levelCompleted.text = stars switch
         {
             0 => LocalizationManager.Localize("failed"),
@@ -162,7 +168,6 @@ public class GameUIHud : MonoBehaviour
         }
         if (_vibroSrars != null)
         {
-            _confetti.gameObject.SetActive(true);
             StopCoroutine(_vibroSrars);
         }
     }
@@ -180,6 +185,7 @@ public class GameUIHud : MonoBehaviour
 
     private IEnumerator TurnOffOnClick(GameObject gameObject)
     {
+        yield return new WaitForSeconds(1.5f);
         yield return new WaitUntil(() => Input.touchCount > 0);
         gameObject.SetActive(false);
         StopCoroutine(_turnOffOnClick);
