@@ -1,23 +1,31 @@
+using Assets.Scripts.Entities;
 using GoogleMobileAds.Api;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 public class SaveLoader : MonoBehaviour
 {
+
     private SaveSystem _save = new SaveSystem();
 
     private void Start()
     {
-        MobileAds.Initialize(initStatus => { });
+        try
+        {
+            MobileAds.Initialize(initStatus => { });
+        }
+        catch (System.Exception e)
+        {
+
+        }
         Assets.SimpleLocalization.LocalizationManager.Read();
         StartCoroutine(LoadAsync());
     }
 
     private IEnumerator LoadAsync()
     {
-        string scene = "Game";
-        if (_save.LoadLastSave()) scene = "Menu";
+        int scene = Constants.GameScene;
+        if (_save.LoadLastSave()) scene = Constants.MenuScene;
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(scene);
 
         asyncLoad.allowSceneActivation = false;
